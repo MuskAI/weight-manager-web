@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>体重管理助手</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .status-card {
+            background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .bmi-value {
+            font-size: 72px;
+            font-weight: bold;
+            line-height: 1;
+        }
+        
+        .bmi-label {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+        
+        .bmi-category {
+            display: inline-block;
+            background: rgba(255,255,255,0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            margin-top: 12px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 24px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            margin-top: 12px;
+        }
+        
+        .progress-section {
+            margin-top: 20px;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #81C784);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .plan-section h3 {
+            margin-bottom: 16px;
+            color: #333;
+        }
+        
+        .plan-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .plan-icon {
+            width: 24px;
+            height: 24px;
+            background: #e8f5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .plan-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+        
+        .records-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .record-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .record-item:last-child {
+            border-bottom: none;
+        }
+        
+        .record-date {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .record-weight {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            opacity: 1;
+        }
+        
+        .tab-nav {
+            display: flex;
+            background: white;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: none;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .settings-group {
+            margin-bottom: 20px;
+        }
+        
+        .settings-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .settings-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚖️ 体重管理助手</h1>
+            <p>记录体重 · 追踪进度 · 健康生活</p>
+        </div>
+        
+        <div class="tab-nav">
+            <button class="tab-btn active" onclick="switchTab('record')">记录</button>
+            <button class="tab-btn" onclick="switchTab('history')">历史</button>
+            <button class="tab-btn" onclick="switchTab('plan')">方案</button>
+            <button class="tab-btn" onclick="switchTab('settings')">设置</button>
+        </div>
+        
+        <!-- 记录页面 -->
+        <div id="tab-record" class="tab-content active">
+            <div class="card status-card">
+                <div class="bmi-value" id="bmi-display">--</div>
+                <div class="bmi-label">BMI 身体质量指数</div>
+                <div class="bmi-category" id="bmi-category">请记录体重</div>
+            </div>
+            
+            <div class="card">
+                <div class="input-group">
+                    <label>今日体重 (kg)</label>
+                    <input type="number" id="weight-input" placeholder="0.0" step="0.1">
+                </div>
+                <button class="btn btn-primary" onclick="saveWeight()">记录体重</button>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span>当前: <span id="current-weight">--</span>kg</span>
+                        <span>目标: <span id="target-weight">65</span>kg</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 历史页面 -->
+        <div id="tab-history" class="tab-content">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">📊 最近记录</h3>
+                <div class="records-list" id="records-list">
+                    <div class="empty-state">暂无记录</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">📈 数据统计</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-count">0</div>
+                        <div style="font-size: 12px; color: #999;">记录天数</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-avg">--</div>
+                        <div style="font-size: 12px; color: #999;">平均体重</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-min">--</div>
+                        <div style="font-size: 12px; color: #999;">最低体重</div>
+                    </div>
+                    <div style="background: #f9f9f9; padding: 16px; border-radius: 8px; text-align: center;">
+                        <div style="font-size: 24px; font-weight: bold; color: #4CAF50;" id="stat-max">--</div>
+                        <div style="font-size: 12px; color: #999;">最高体重</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 方案页面 -->
+        <div id="tab-plan" class="tab-content">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">🎯 减肥方案</h3>
+                <div id="plan-content">
+                    <div class="plan-item">
+                        <div class="plan-icon">🍽️</div>
+                        <div class="plan-text">请先记录体重获取个性化方案</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 设置页面 -->
+        <div id="tab-settings" class="tab-content">
+            <div class="card">
+                <h3 style="margin-bottom: 16px;">⚙️ 个人设置</h3>
+                <div class="settings-group">
+                    <label>身高 (cm)</label>
+                    <input type="number" id="height-setting" value="170" onchange="saveSettings()">
+                </div>
+                <div class="settings-group">
+                    <label>目标体重 (kg)</label>
+                    <input type="number" id="target-setting" value="65" onchange="saveSettings()">
+                </div>
+                <button class="btn btn-secondary" onclick="clearData()">清除所有数据</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // 默认配置
+        const DEFAULT_DATA = {
+            records: [],
+            height: 170,
+            targetWeight: 65
+        };
+        
+        // 加载数据
+        function loadData() {
+            const saved = localStorage.getItem('weightData');
+            return saved ? JSON.parse(saved) : DEFAULT_DATA;
+        }
+        
+        // 保存数据
+        function saveData(data) {
+            localStorage.setItem('weightData', JSON.stringify(data));
+        }
+        
+        // 计算BMI
+        function calculateBMI(weight, height) {
+            if (!weight || !height) return 0;
+            return (weight / Math.pow(height / 100, 2)).toFixed(1);
+        }
+        
+        // 获取BMI分类
+        function getBMICategory(bmi) {
+            if (bmi < 18.5) return { category: '偏瘦', color: '#FFA500', advice: '需要适当增重' };
+            if (bmi < 24) return { category: '正常', color: '#4CAF50', advice: '保持健康生活方式' };
+            if (bmi < 28) return { category: '超重', color: '#FF9800', advice: '建议适当减重' };
+            if (bmi < 30) return { category: '轻度肥胖', color: '#FF5722', advice: '需要积极管理' };
+            return { category: '肥胖', color: '#F44336', advice: '建议咨询医生' };
+        }
+        
+        // 获取减肥方案
+        function getPlan(bmi, height) {
+            const targetMin = (18.5 * Math.pow(height / 100, 2)).toFixed(1);
+            const targetMax = (24 * Math.pow(height / 100, 2)).toFixed(1);
+            
+            if (bmi >= 28) {
+                return {
+                    target: `${targetMin}-${targetMax}kg`,
+                    duration: '6-12个月',
+                    diet: [
+                        '每日1500-1800大卡',
+                        '戒零食、饮料、宵夜',
+                        '211饮食法：2拳蔬菜+1掌蛋白+1拳主食',
+                        '19点前吃完晚餐'
+                    ],
+                    exercise: [
+                        '每天快走40分钟',
+                        '每周3次力量训练',
+                        '逐步增加运动强度'
+                    ],
+                    tips: [
+                        '建议咨询营养师',
+                        '关注血压血糖',
+                        '保持7-8小时睡眠'
+                    ]
+                };
+            } else {
+                return {
+                    target: `${targetMin}-${targetMax}kg`,
+                    duration: '3-6个月',
+                    diet: [
+                        '每日1800-2000大卡',
+                        '减少高油高盐食物',
+                        '多吃蔬菜水果',
+                        '粗粮为主食'
+                    ],
+                    exercise: [
+                        '每周快走5次x30分钟',
+                        '每天20分钟核心训练',
+                        '每周2次游泳或骑行'
+                    ],
+                    tips: [
+                        '不要极端节食',
+                        '保持规律作息',
+                        '每周称重1次'
+                    ]
+                };
+            }
+        }
+        
+        // 显示提示
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+        
+        // 切换标签页
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+            
+            if (tab === 'record') updateDisplay();
+            if (tab === 'history') updateHistory();
+            if (tab === 'plan') updatePlan();
+        }
+        
+        // 更新显示
+        function updateDisplay() {
+            const data = loadData();
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecord = data.records.find(r => r.date === today);
+            
+            const weightInput = document.getElementById('weight-input');
+            const bmiDisplay = document.getElementById('bmi-display');
+            const bmiCategory = document.getElementById('bmi-category');
+            const currentWeight = document.getElementById('current-weight');
+            const targetWeight = document.getElementById('target-weight');
+            const progressFill = document.getElementById('progress-fill');
+            
+            // 设置目标
+            targetWeight.textContent = data.targetWeight;
+            document.getElementById('height-setting').value = data.height;
+            document.getElementById('target-setting').value = data.targetWeight;
+            
+            if (todayRecord) {
+                weightInput.value = todayRecord.weight;
+                const bmi = calculateBMI(todayRecord.weight, data.height);
+                const result = getBMICategory(bmi);
+                
+                bmiDisplay.textContent = bmi;
+                bmiCategory.textContent = result.category;
+                bmiCategory.style.background = result.color;
+                currentWeight.textContent = todayRecord.weight;
+            } else if (data.records.length > 0) {
+                const latest = data.records[data.records.length - 1];
+                const bmi = calculateBMI(latest.weight, data.height);
+                const result = getBMICategory(bmi);
+                
+                bmiDisplay.textContent = bmi;
+                bmiCategory.textContent = result.category;
+                bmiCategory.style.background = result.color;
+                currentWeight.textContent = latest.weight;
+                weightInput.value = latest.weight;
+            } else {
+                bmiDisplay.textContent = '--';
+                bmiCategory.textContent = '请记录体重';
+                currentWeight.textContent = '--';
+            }
+            
+            // 更新进度条
+            if (data.records.length > 0) {
+                const current = todayRecord ? todayRecord.weight : data.records[data.records.length - 1].weight;
+                const start = data.records[0].weight;
+                const target = data.targetWeight;
+                const totalToLose = start - target;
+                const lost = start - current;
+                const progress = totalToLose > 0 ? Math.min(100, Math.max(0, (lost / totalToLose) * 100)) : 0;
+                progressFill.style.width = progress + '%';
+            }
+            
+            // 实时计算BMI
+            weightInput.oninput = function() {
+                if (this.value) {
+                    const bmi = calculateBMI(parseFloat(this.value), data.height);
+                    const result = getBMICategory(bmi);
+                    bmiDisplay.textContent = bmi;
+                    bmiCategory.textContent = result.category;
+                    bmiCategory.style.background = result.color;
+                }
+            };
+        }
+        
+        // 记录体重
+        function saveWeight() {
+            const weight = parseFloat(document.getElementById('weight-input').value);
+            
+            if (!weight || weight < 20 || weight > 300) {
+                showToast('请输入有效体重');
+                return;
+            }
+            
+            const data = loadData();
+            const today = new Date().toISOString().split('T')[0];
+            
+            const existingIndex = data.records.findIndex(r => r.date === today);
+            if (existingIndex >= 0) {
+                data.records[existingIndex].weight = weight;
+            } else {
+                data.records.push({ date: today, weight: weight });
+            }
+            
+            data.records.sort((a, b) => new Date(a.date) - new Date(b.date));
+            saveData(data);
+            
+            showToast('体重已记录');
+            updateDisplay();
+        }
+        
+        // 更新历史记录
+        function updateHistory() {
+            const data = loadData();
+            const list = document.getElementById('records-list');
+            
+            if (data.records.length === 0) {
+                list.innerHTML = '<div class="empty-state">暂无记录</div>';
+                return;
+            }
+            
+            const recent = data.records.slice(-10).reverse();
+            list.innerHTML = recent.map(r => `
+                <div class="record-item">
+                    <span class="record-date">${r.date}</span>
+                    <span class="record-weight">${r.weight}kg</span>
+                </div>
+            `).join('');
+            
+            // 统计
+            const weights = data.records.map(r => r.weight);
+            document.getElementById('stat-count').textContent = weights.length;
+            document.getElementById('stat-avg').textContent = weights.length > 0 ? (weights.reduce((a, b) => a + b, 0) / weights.length).toFixed(1) : '--';
+            document.getElementById('stat-min').textContent = weights.length > 0 ? Math.min(...weights).toFixed(1) : '--';
+            document.getElementById('stat-max').textContent = weights.length > 0 ? Math.max(...weights).toFixed(1) : '--';
+        }
+        
+        // 更新方案
+        function updatePlan() {
+            const data = loadData();
+            let bmi = 0;
+            
+            if (data.records.length > 0) {
+                const latest = data.records[data.records.length - 1];
+                bmi = calculateBMI(latest.weight, data.height);
+            }
+            
+            const plan = getPlan(bmi || 26, data.height);
+            const planContent = document.getElementById('plan-content');
+            
+            planContent.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <strong>目标:</strong> ${plan.target} | <strong>周期:</strong> ${plan.duration}
+                </div>
+                <h4 style="margin: 16px 0 12px;">🍽️ 饮食建议</h4>
+                ${plan.diet.map(d => `
+                    <div class="plan-item">
+                        <div class="plan-icon" style="background: #fff3e0;">🍽️</div>
+                        <div class="plan-text">${d}</div>
+                    </div>
+                `).join('')}
+                <h4 style="margin: 16px 0 12px;">🏃 运动建议</h4>
+                ${plan.exercise.map(e => `
+                    <div class="plan-item">
+                        <div class="plan-icon" style="background: #e3f2fd;">🏃</div>
+                        <div class="plan-text">${e}</div>
+                    </div>
+                `).join('')}
+                <h4 style="margin: 16px 0 12px;">💡 小贴士</h4>
+                ${plan.tips.map(t => `
+                    <div class="plan-item">
+                        <div class="plan-icon" style="background: #f3e5f5;">💡</div>
+                        <div class="plan-text">${t}</div>
+                    </div>
+                `).join('')}
+            `;
+        }
+        
+        // 保存设置
+        function saveSettings() {
+            const data = loadData();
+            data.height = parseInt(document.getElementById('height-setting').value) || 170;
+            data.targetWeight = parseFloat(document.getElementById('target-setting').value) || 65;
+            saveData(data);
+            showToast('设置已保存');
+            updateDisplay();
+        }
+        
+        // 清除数据
+        function clearData() {
+            if (confirm('确定要清除所有数据吗？')) {
+                localStorage.removeItem('weightData');
+                saveData(DEFAULT_DATA);
+                showToast('数据已清除');
+                updateDisplay();
+            }
+        }
+        
+        // 初始化
+        updateDisplay();
+    </script>
+</body>
+</html>
